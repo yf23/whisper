@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 import numpy as np
 import torch
 import tqdm
+import time
 
 from .audio import (
     FRAMES_PER_SECOND,
@@ -251,6 +252,7 @@ def transcribe(
         }
 
     # show the progress bar when verbose is False (if True, transcribed text will be printed)
+    time_segment_list = []  ## LOG: Segment Time list
     with tqdm.tqdm(
         total=content_frames, unit="frames", disable=verbose is not False
     ) as pbar:
@@ -260,6 +262,8 @@ def transcribe(
         # for seek_clip_start, seek_clip_end in seek_clips:
         #     while seek < seek_clip_end
         while clip_idx < len(seek_clips):
+            time_segment_start = time.perf_counter() # LOG: Segment Time start
+
             seek_clip_start, seek_clip_end = seek_clips[clip_idx]
             if seek < seek_clip_start:
                 seek = seek_clip_start
@@ -488,9 +492,13 @@ def transcribe(
                 # do not feed the prompt tokens if a high temperature was used
                 prompt_reset_since = len(all_tokens)
 
+            time_segment_end = time.perf_counter() # LOG: Segment Time end
+            time_segment_list.append(time_segment_end - time_segment_start) # LOG: Update Segment Time list
+
             # update progress bar
             pbar.update(min(content_frames, seek) - previous_seek)
 
+    print(f"\nProcessing time of all segments: {time_segment_list}\n") # LOG: Print Segment Time list
     return dict(
         text=tokenizer.decode(all_tokens[len(initial_prompt_tokens) :]),
         segments=all_segments,
