@@ -499,6 +499,8 @@ def transcribe(
             pbar.update(min(content_frames, seek) - previous_seek)
 
     print(f"\nProcessing time of all segments: {time_segment_list}\n") # LOG: Print Segment Time list
+    print(f"Average processing time of all segments: {sum(time_segment_list) / len(time_segment_list)}\n") # LOG: Print Average Segment Time
+    print(f"Total processing time of all segments: {sum(time_segment_list)}\n") # LOG: Print Total Segment Time
     return dict(
         text=tokenizer.decode(all_tokens[len(initial_prompt_tokens) :]),
         segments=all_segments,
